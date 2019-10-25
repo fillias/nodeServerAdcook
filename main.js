@@ -23,6 +23,10 @@ app.use( (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const mainRoutes = require('./routes/mainRoutes');
+const newByznysRoutes = require('./apps/newByznys/routes/newByznysRoutes');
+
+
+app.use('/newByznys', newByznysRoutes); 
 
 app.use(mainRoutes);
 

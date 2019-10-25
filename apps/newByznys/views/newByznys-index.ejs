@@ -1,9 +1,12 @@
 <%- include('./includes/head.ejs') %>
+<h3 class="display-5 p-3 text-center text-light bg-info">New Bussiness checker</h3>
+<main class="container d-flex justify-content-center align-items-center min-vh-100">
 
-
-    <%- include('./includes/navigation.ejs') %>
-
-    <main class="container d-flex justify-content-center align-items-center min-vh-100">
-        <h3 class ="display-5">Byznys views</h3>
-    </main>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <form action="/load-report" method="POST">
+            <p>testni</p>
+            <button type="submit" class="btn btn-primary">loadni report</button>
+        </form>
+    </div>
+</main>
 <%- include('./includes/end.ejs') %>
