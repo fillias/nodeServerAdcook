@@ -11,7 +11,7 @@ app.set('views', [path.join(__dirname, 'views'), path.join(__dirname, 'apps', 'n
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-
+app.use(bodyParser.json());
 
 app.use( (req, res, next) => {
     console.log('');
@@ -22,6 +22,8 @@ app.use( (req, res, next) => {
 
 /* newByznys static files */
 app.use('/newByznys/js', express.static(path.join(__dirname, 'apps', 'newByznys', 'public', 'js')));
+app.use('/newByznys/images', express.static(path.join(__dirname, 'apps', 'newByznys', 'public', 'images')));
+app.use('/newByznys/css', express.static(path.join(__dirname, 'apps', 'newByznys', 'public', 'css')));
 
 
 app.use(express.static(path.join(__dirname, 'public')));

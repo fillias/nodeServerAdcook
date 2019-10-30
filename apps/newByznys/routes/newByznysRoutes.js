@@ -2,8 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 
-const newByznys = require('../app');
+const newByznysApp = require('../app');
 
-router.get('/', newByznys.getIndex);
+const newByznysAPI = require('../controllers/api');
+
+
+// GET  /feed/posts
+router.get('/getreport', newByznysAPI.getReport);
+
+
+router.get('/', newByznysApp.getIndex);
 
 module.exports = router;
