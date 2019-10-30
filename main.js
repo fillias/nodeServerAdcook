@@ -20,6 +20,10 @@ app.use( (req, res, next) => {
     next();
 });
 
+/* newByznys static files */
+app.use('/newByznys/js', express.static(path.join(__dirname, 'apps', 'newByznys', 'public', 'js')));
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const mainRoutes = require('./routes/mainRoutes');
