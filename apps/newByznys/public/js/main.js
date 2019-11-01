@@ -14,12 +14,35 @@ loadBtn.addEventListener('click', () => {
 });
 
 
+
 function getReport() {
-   var x = getApiResponse('/newByznys/getreport')
-    .then(res => {
+    /* funkce se spousti na klik na FE 
+    ** v query je akce kterou chceme
+    ** poradi je: 
+    ** stahni report za poslednich 365 dnu
+    ** stahni report starsi nez 365 dnu
+    ** nech vypocitat vysledek
+    ** nech stahnout vysledne csv
+    */
+
+   
+   resultContainer.innerText = "stahuju prvni report";
+   resultContainer.style.display = 'block';
+
+   getApiResponse('/newByznys/getreport?action=oneYearAgo')
+    .then(result => {
+        return result;
+    })
+    .then(result => {
+        resultContainer.innerText = "stahuju druhy report";
+        console.log('druhy then', result.message);
+        return getApiResponse('/newByznys/getreport?action=twoYearAgo')
+    })
+    .then(result => {
+        resultContainer.innerText = "oboji stazeno";
         progressContainer.style.display = 'none';
-        resultContainer.innerText = res.message;
-        resultContainer.style.display = 'block';
+        console.log('treti then', result);
+        
     })
     .catch(err => console.log(err));
 }
@@ -35,6 +58,7 @@ function getApiResponse (url) {
             }
             return res.json();
         }).then(resData => {
+           // console.log('resolve resData');
             resolve(resData);
         })
     })
