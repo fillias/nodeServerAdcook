@@ -19,16 +19,17 @@ echo -e "\n"
 
 #echo $reportOptions
 
-myDir="$(pwd)"
-myDir+="/apps/newByznys/downloadedReports"
+# myDir="$(pwd)"
+# myDir+="/apps/newByznys/downloadedReports"
 
-echo $1 > "$myDir/$1.xml"
-echo $1 > "$myDir/$1.csv"
+# echo $1 > "$myDir/$1.xml"
+# echo $1 > "$myDir/$1.csv"
 
-cat "$myDir/$1.csv"
+# cat "$myDir/$1.csv"
 
+counter=1
 
-while [[ counter -le 5 ]]; do
+while [[ counter -le 6 ]]; do
 	sleep 2
 	echo "Pokus cislo: $counter"
 	echo -e "\n"
@@ -40,5 +41,5 @@ done
 
 
 echo -e "\n\n"
-echo -e "downloaded"
+echo -e "stazeno"
 
