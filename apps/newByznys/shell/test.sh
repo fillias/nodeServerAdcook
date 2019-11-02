@@ -17,6 +17,21 @@ reportOptions="&utf8=%E2%9C%93&tactical_report%5Btitle%5D=&tactical_report%5Bdat
 
 echo -e "\n"
 
+# xmlRes="$(cat ../downloadedReports/oneYearAgo.xml)"
+# #xmlRes="$(cat ../downloadedReports/response.xml)"
+# xmlResCharCount=$( wc -c <<<$xmlRes )
+
+# echo $xmlRes
+# echo -e "\n"
+# echo $xmlResCharCount
+
+# pokud nemam job id -- ma charcount 1 -- vyhod chybu a exit
+# if [ "$xmlResCharCount" -eq 1 ]  ; then 
+# 	echo "error"
+# 	exit 0   
+# fi
+
+
 #echo $reportOptions
 
 # myDir="$(pwd)"
@@ -29,8 +44,8 @@ echo -e "\n"
 
 counter=1
 
-while [[ counter -le 6 ]]; do
-	sleep 2
+while [[ counter -le 3 ]]; do
+	sleep 10
 	echo "Pokus cislo: $counter"
 	echo -e "\n"
 

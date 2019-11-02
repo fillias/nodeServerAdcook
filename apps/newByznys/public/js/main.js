@@ -39,6 +39,11 @@ function getReport() {
         })
         .then(result => {
             console.log('druhy then', result);
+            if (result === 'jobId-failed') {
+                throw new Error('jobId-failed - missing jobID');
+            }
+
+            console.log('druhy then', result);
             getApiResponse('/newByznys/getreport?action=twoYearAgo')
             resultContainer.innerText = "stahuju druhy report";           
         })
@@ -47,14 +52,23 @@ function getReport() {
             return checkDownloadingStatus('twoYearAgo');
         }).then(result => {
             console.log('ctvrty then', result);
+            
+            if (result === 'jobId-failed') {
+                throw new Error('jobId-failed - missing jobID');
+            }
+
             resultContainer.innerText = "oboji stazeno";
             progressContainer.style.display = 'none';
 
-        }).catch(err => console.log(err));
+        }).catch(err => {
+            resultContainer.innerText = "Chyba - kontaktuj support";
+            progressContainer.style.display = 'none';
+            console.log(err)
+        });
 
 }
 
-
+/* kazdych 11sec se dotaz jestli je report ze SAS stazeny */
 async function checkDownloadingStatus(action) {
     const result = await new Promise((resolve, reject) => {
         var timer = setInterval(() => {
@@ -62,6 +76,12 @@ async function checkDownloadingStatus(action) {
             getApiResponse(`/newByznys/getreport?action=completed&reportType=${action}`)
                 .then(result => {
                     console.log('checkDownloadingStatus result', result);
+
+                    if (result.message === 'jobId-failed') {
+                        clearInterval(timer);
+                        resolve(`jobId-failed`);
+                    }
+
                     if (result.message === `${action}-completed`) {
                         clearInterval(timer);
                         resolve(`${action}-completed`);
@@ -70,7 +90,7 @@ async function checkDownloadingStatus(action) {
                 .catch(err => {
                     console.log(err)
                 });
-        }, 5000);
+        }, 11000);
     });
 
     return result;

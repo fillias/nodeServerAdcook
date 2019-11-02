@@ -9,6 +9,8 @@ const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedRepo
 /* shelljs chce v path z nejakyho duvodu lomitka escapovat */
 // const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
 
+
+// testovaci sh script
 const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
 
 let completed = {
@@ -42,6 +44,16 @@ exports.getReport = (req, res, next) => {
             if (completed[reportType] === true) {
                 res.status(200).json({
                     message: `${reportType}-completed`
+                });
+
+                /* setnem zpatky stav na false pro pristi requesty */
+                completed[reportType] = false;
+                return;
+        
+            } else if (completed[reportType] === 'jobId-failed') {
+                /* pokud neco failne */
+                res.status(200).json({
+                    message: `jobId-failed`
                 });
 
                 /* setnem zpatky stav na false pro pristi requesty */
@@ -97,6 +109,12 @@ exports.getReport = (req, res, next) => {
             /* jakmile je shell script hotov nastav true */
            console.log(`report ${action} downloader done`);
             completed[action] = true;
+        }
+
+        if (data.match('jobId-failed')) {
+            /* jakmile je shell script hotov nastav true */
+           console.log(`report ${action} jobId-failed`);
+            completed[action] = `jobId-failed`;
         }
     });
 
