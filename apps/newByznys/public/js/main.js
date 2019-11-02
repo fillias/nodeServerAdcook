@@ -2,6 +2,7 @@ const loadBtn = document.getElementById('btn-load-report');
 const progressContainer = document.getElementById('progress-info-container');
 const progresText = document.getElementById('progress-info');
 const resultContainer = document.getElementById('result');
+const progressCounter = document.getElementById('progress-info-container-counter');
 
 let clicked = false;
 
@@ -13,10 +14,6 @@ loadBtn.addEventListener('click', () => {
     clicked = true;
 });
 
-var x = false;
-setTimeout(() => {
-    x = true;
-}, 15000);
 
 function getReport() {
     /* funkce se spousti na klik na FE 
@@ -29,7 +26,7 @@ function getReport() {
      */
 
 
-    resultContainer.innerText = "stahuju prvni report";
+    resultContainer.innerHTML = "Stahuju prvni report - cekam na odpoved.";
     resultContainer.style.display = 'block';
 
     getApiResponse('/newByznys/getreport?action=oneYearAgo')
@@ -42,10 +39,11 @@ function getReport() {
             if (result === 'jobId-failed') {
                 throw new Error('jobId-failed - missing jobID');
             }
-
+            progressCounter.innerHTML = '';
             console.log('druhy then', result);
+            resultContainer.innerText = "Stahuju druhy report - cekam na odpoved.";
             getApiResponse('/newByznys/getreport?action=twoYearAgo')
-            resultContainer.innerText = "stahuju druhy report";           
+                       
         })
         .then(result => {
             console.log('treti then', result);
@@ -59,10 +57,12 @@ function getReport() {
 
             resultContainer.innerText = "oboji stazeno";
             progressContainer.style.display = 'none';
+            progressCounter.innerHTML = '';
 
         }).catch(err => {
             resultContainer.innerText = "Chyba - kontaktuj support";
             progressContainer.style.display = 'none';
+            progressCounter.innerHTML = '';
             console.log(err)
         });
 
@@ -71,7 +71,10 @@ function getReport() {
 /* kazdych 11sec se dotaz jestli je report ze SAS stazeny */
 async function checkDownloadingStatus(action) {
     const result = await new Promise((resolve, reject) => {
+        let counter = 1;
+        let nazev = action === 'oneYearAgo' ? 'Prvni' : 'Druhy';
         var timer = setInterval(() => {
+            
             //console.log('timer', timer);
             getApiResponse(`/newByznys/getreport?action=completed&reportType=${action}`)
                 .then(result => {
@@ -84,8 +87,13 @@ async function checkDownloadingStatus(action) {
 
                     if (result.message === `${action}-completed`) {
                         clearInterval(timer);
+                        counter = 1;
                         resolve(`${action}-completed`);
                     }
+
+                progressCounter.innerHTML = `${nazev} report ve fronte - pokus cislo: <strong>${counter}</strong>`;
+                counter ++;
+
                 })
                 .catch(err => {
                     console.log(err)
