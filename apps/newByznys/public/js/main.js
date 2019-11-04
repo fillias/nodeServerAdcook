@@ -22,20 +22,6 @@ const newByznys = (function () {
     });
 
 
-    testCsvBtn.addEventListener('click', () => {
-        getApiResponse('/newByznys/process-csv')
-            .then(result => {
-                console.log(result);
-            })
-            .then(result => {
-               return checkProcessingStatus()
-               
-            })
-            .then (result => {
-                console.log('done', result);
-            })
-            .catch(e => console.log(e));
-    });
 
     function getReport() {
         /* funkce se spousti na klik na FE 
@@ -77,9 +63,15 @@ const newByznys = (function () {
                     throw new Error('jobId-failed - missing jobID');
                 }
 
-                resultContainer.innerText = "oboji stazeno";
-                progressContainer.style.display = 'none';
+                resultContainer.innerText = "oboji stazeno, pocitam vysledne csv";
                 progressCounter.innerHTML = '';
+                /* kdyz je stazeno, zacni procesovat csv */
+                return processCsv();
+            }).then(result => {
+                /* zde mame vse hotovo */
+                progressContainer.style.display = 'none';
+                progressCounter.innerHTML = 'VSE hotovo';
+                console.log(result);
 
             }).catch(err => {
                 resultContainer.innerText = "Chyba - kontaktuj support";
@@ -127,6 +119,21 @@ const newByznys = (function () {
     }
 
 
+
+    function processCsv () {
+        return new Promise ((resolve, reject) => {
+            getApiResponse('/newByznys/process-csv')
+            .then(result => {
+                console.log(result);
+            })
+            .then(result => {
+               resolve( checkProcessingStatus() );
+               
+            })
+            .catch(e => console.log(e));
+        })
+    }
+
     /* kazdych 11sec se dotaz jestli je csv zpracovano */
     async function checkProcessingStatus() {
         const result = await new Promise((resolve, reject) => {
@@ -144,7 +151,10 @@ const newByznys = (function () {
                             counter = 1;
                             resolve(`csv-process-completed`);
                         }
-
+                        progressCounter.innerHTML = `
+                            Pocet radku v reportu za poslednich 365 dnu: ${result.oneYearAgoLength}<br>
+                            Pocet radku v reportu se starsimi zaznamy: ${result.twoYearAgoLength}<br>
+                            Cekam na zpracovani vysledneho csv - pokus cislo: <strong>${counter}</strong>`;
                         counter++;
 
                     })
@@ -186,6 +196,9 @@ const newByznys = (function () {
             download(blob, filename);
         });
     }
+
+
+
 
 
 })();

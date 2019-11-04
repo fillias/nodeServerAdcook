@@ -45,7 +45,7 @@ echo -e "\n"
 counter=1
 
 while [[ counter -le 3 ]]; do
-	sleep 10
+	sleep 1
 	echo "Pokus cislo: $counter"
 	echo -e "\n"
 

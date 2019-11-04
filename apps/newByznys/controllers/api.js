@@ -18,7 +18,9 @@ const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.s
 let completed = {
     oneYearAgo: false,
     twoYearAgo: false,
-    processingCsv: false
+    csvProcessed: false,
+    oneYearAgoLength : 0,
+    twoYearAgoLength : 0
 }
 
 
@@ -78,23 +80,26 @@ exports.getReport = (req, res, next) => {
             /* mame dokoncene zprocesovani csv? */
             case 'csv-process':
                 /* pokud se FE pta jestli je completed stazeni vrat jen stav a return */
-                if (completed.csvprocessing === true) {
-                    completed.csvprocessing = false;
+                if (completed.csvProcessed === true) {
+                    completed.csvProcessed = false;
                     res.status(200).json({
                         message: `csv-process-completed`
                     });
     
                     /* setnem zpatky stav na false pro pristi requesty */
-                    completed.csvprocessing = false;
+                    completed.csvProcessed = false;
                     return;
             
                 }
     
                 res.status(200).json({
-                    message: `csv-process-pending`
+                    message: `csv-process-pending`,
+                    oneYearAgoLength: completed.oneYearAgoLength,
+                    twoYearAgoLength: completed.twoYearAgoLength
                 });
                 return;
-        
+ 
+                
         /* stahni pozadovany report */
         case 'oneYearAgo':
             startDate = encodeURIComponent(toSasDate(oneYearAgo));
@@ -164,7 +169,7 @@ exports.processCsv = (req, res, next) => {
     });
 
     /* !!!! cpu a time heavy operace */
-  //  zpracujCsv();
+   zpracujCsv();
 }
 
 
@@ -200,7 +205,16 @@ function zpracujCsv () {
         .on('end', () => {
          //  console.log(oneYearAgo);
           //  console.log(`csvOneYearAgo hotovo`);
-          deleteOldByznys(oldAdvertisers, oneYearAgo);
+            completed.oneYearAgoLength = oneYearAgo.length;
+            completed.twoYearAgoLength = oldAdvertisers.length;
+
+            /* mock cpu heavy operation */
+            setTimeout(_ => {
+                completed.csvProcessed = true;
+            }, 40000);
+
+          /* !!!! cpu a time heavy operace */
+         // deleteOldByznys(oldAdvertisers, oneYearAgo);
         });
 
 
