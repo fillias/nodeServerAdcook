@@ -7,6 +7,8 @@ const newByznys = (function () {
     const progressCounter = document.getElementById('progress-info-container-counter');
     const downloadBtn = document.getElementById('btn-download-result');
 
+    const testCsvBtn = document.getElementById('testCsv');
+
 
 
     loadBtn.addEventListener('click', () => {
@@ -17,6 +19,22 @@ const newByznys = (function () {
 
     downloadBtn.addEventListener('click', () => {
         downloadFile('/newByznys/downloadresult', 'result.csv')
+    });
+
+
+    testCsvBtn.addEventListener('click', () => {
+        getApiResponse('/newByznys/process-csv')
+            .then(result => {
+                console.log(result);
+            })
+            .then(result => {
+               return checkProcessingStatus()
+               
+            })
+            .then (result => {
+                console.log('done', result);
+            })
+            .catch(e => console.log(e));
     });
 
     function getReport() {
@@ -108,6 +126,36 @@ const newByznys = (function () {
         return result;
     }
 
+
+    /* kazdych 11sec se dotaz jestli je csv zpracovano */
+    async function checkProcessingStatus() {
+        const result = await new Promise((resolve, reject) => {
+            let counter = 1;
+            var timer = setInterval(() => {
+
+                //console.log('timer', timer);
+                getApiResponse(`/newByznys/getreport?action=csv-process`)
+                    .then(result => {
+                        console.log('checkDownloadingStatus result', result);
+
+
+                        if (result.message === `csv-process-completed`) {
+                            clearInterval(timer);
+                            counter = 1;
+                            resolve(`csv-process-completed`);
+                        }
+
+                        counter++;
+
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    });
+            }, 11000);
+        });
+
+        return result;
+    }
 
 
     function getApiResponse(url) {

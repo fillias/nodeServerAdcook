@@ -14,15 +14,18 @@ const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedRepo
 // testovaci sh script
 const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
 
+
 let completed = {
     oneYearAgo: false,
-    twoYearAgo: false
+    twoYearAgo: false,
+    processingCsv: false
 }
 
 
 
-
 exports.getReport = (req, res, next) => {
+
+ 
 
     console.log('......... get report .........');
 
@@ -40,6 +43,10 @@ exports.getReport = (req, res, next) => {
     let startDate, endDate;
 
     switch (action) {
+
+        /* FE se pta na stavy operaci */
+
+        /* mame stazene reporty ze SAS? */
         case 'completed':
             /* pokud se FE pta jestli je completed stazeni vrat jen stav a return */
             if (completed[reportType] === true) {
@@ -67,6 +74,28 @@ exports.getReport = (req, res, next) => {
             });
             return;
 
+
+            /* mame dokoncene zprocesovani csv? */
+            case 'csv-process':
+                /* pokud se FE pta jestli je completed stazeni vrat jen stav a return */
+                if (completed.csvprocessing === true) {
+                    completed.csvprocessing = false;
+                    res.status(200).json({
+                        message: `csv-process-completed`
+                    });
+    
+                    /* setnem zpatky stav na false pro pristi requesty */
+                    completed.csvprocessing = false;
+                    return;
+            
+                }
+    
+                res.status(200).json({
+                    message: `csv-process-pending`
+                });
+                return;
+        
+        /* stahni pozadovany report */
         case 'oneYearAgo':
             startDate = encodeURIComponent(toSasDate(oneYearAgo));
             endDate = encodeURIComponent(toSasDate(now));
@@ -127,6 +156,58 @@ exports.getReport = (req, res, next) => {
 }
 
 
+exports.processCsv = (req, res, next) => {
+    /* vratime odpoved ze na tom makam */
+
+    res.status(200).json({
+        message: `csv-process-pending`
+    });
+
+    /* !!!! cpu a time heavy operace */
+  //  zpracujCsv();
+}
+
+
+function zpracujCsv () {
+
+    const csvParse = require('csv-parse');
+    const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
+
+    const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+
+    // vytahneme z twoYearAgo.csv advertisery (jsou jako 4. sloupec)
+    let oldAdvertisers = []
+    let oneYearAgo = [];
+
+    fs.createReadStream(csvTwoYearAgo)
+    .pipe(csvParse())
+    .on('data', (row) => {
+       // console.log(row[3]);
+        oldAdvertisers.push(row[3]);
+    })
+    .on('end', () => {
+       // console.log(oldAdvertisers);
+       // console.log(`csvTwoYearAgo hotovo`);
+
+
+        // loadnem oneYearAgo.csv
+        fs.createReadStream(csvOneYearAgo)
+        .pipe(csvParse())
+        .on('data', (row) => {
+          // console.log(row.join(','));
+            oneYearAgo.push(row.join(','));
+        })
+        .on('end', () => {
+         //  console.log(oneYearAgo);
+          //  console.log(`csvOneYearAgo hotovo`);
+          deleteOldByznys(oldAdvertisers, oneYearAgo);
+        });
+
+
+    });
+}
+
+
 exports.downloadResult = (req, res, next) => {
 
     const cesta = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
@@ -139,6 +220,27 @@ exports.downloadResult = (req, res, next) => {
 
 }
 
+
+function deleteOldByznys (oldAdvertisers, oneYearAgo) {
+    console.log(oneYearAgo.length);
+    let counter = 1;
+    const result = oneYearAgo.filter(entry => {
+     //   console.log('--------', entry);
+      //  console.log(`--${counter}--`);
+        const found = oldAdvertisers.find(advertiser => {
+            if (entry.search(advertiser) != -1) {
+                return advertiser;
+            } 
+        });
+        /* pokud advertisera nenajde, vrat true */
+        counter++;
+        return found == undefined ? true : false;
+
+    })
+    
+    console.log(result.length);
+
+}
 
 
 
