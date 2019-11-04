@@ -1,5 +1,6 @@
 const shell = require('shelljs');
 const path = require('path');
+const fs = require('fs');
 
 const mainDirectory = path.dirname(process.mainModule.filename);
 
@@ -124,6 +125,21 @@ exports.getReport = (req, res, next) => {
 
 
 }
+
+
+exports.downloadResult = (req, res, next) => {
+
+    const cesta = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
+
+     const file = fs.createReadStream(cesta);
+     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+     res.setHeader('Content-Disposition', 'attachment; filename="result.csv"');
+
+     file.pipe(res);
+
+}
+
+
 
 
 function toSasDate(dateObj) {

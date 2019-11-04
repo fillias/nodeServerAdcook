@@ -7,8 +7,10 @@ const newByznysApp = require('../app');
 const newByznysAPI = require('../controllers/api');
 
 
-// GET  /feed/posts
+
 router.get('/getreport', newByznysAPI.getReport);
+
+router.get('/downloadresult', newByznysAPI.downloadResult);
 
 
 router.get('/', newByznysApp.getIndex);
