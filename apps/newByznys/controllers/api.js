@@ -1,6 +1,7 @@
 const shell = require('shelljs');
 const path = require('path');
 const fs = require('fs');
+const csvParse = require('csv-parse');
 
 const mainDirectory = path.dirname(process.mainModule.filename);
 
@@ -175,7 +176,6 @@ exports.processCsv = (req, res, next) => {
 
 function zpracujCsv () {
 
-    const csvParse = require('csv-parse');
     const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
 
     const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
@@ -213,6 +213,8 @@ function zpracujCsv () {
                 completed.csvProcessed = true;
             }, 40000);
 
+            /* test */
+            saveToFile(oneYearAgo);
           /* !!!! cpu a time heavy operace */
          // deleteOldByznys(oldAdvertisers, oneYearAgo);
         });
@@ -253,9 +255,25 @@ function deleteOldByznys (oldAdvertisers, oneYearAgo) {
     })
     
     console.log(result.length);
+    // todo
+    saveToFile(result);
 
 }
 
+
+function saveToFile(arr) {
+    // todo
+    // const result = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
+
+    // fs.createWriteStream(cesta)
+    // .pipe(csvParse())
+    // .on('data', (row) => {
+    //   csvParse.write(row);
+    // })
+    // .on('end', () => {
+    //   console.log('end');
+    // });
+}
 
 
 function toSasDate(dateObj) {
