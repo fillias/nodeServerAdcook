@@ -9,7 +9,6 @@ const newByznys = (function () {
     const progressCounter = document.getElementById('progress-info-container-counter');
     const downloadBtn = document.getElementById('btn-download-result');
 
-    const testCsvBtn = document.getElementById('testCsv');
 
 
 
@@ -72,7 +71,9 @@ const newByznys = (function () {
             }).then(result => {
                 /* zde mame vse hotovo */
                 progressContainer.style.display = 'none';
-                progressCounter.innerHTML = 'VSE hotovo';
+                downloadBtn.style.display = 'block';
+                resultContainer.style.display = 'none';
+                progressCounter.innerHTML = 'Vse hotovo, muzes stahnout vysledny report';
                 console.log(result);
 
             }).catch(err => {

@@ -6,10 +6,15 @@ const csvParse = require('csv-parse');
 const mainDirectory = path.dirname(process.mainModule.filename);
 
 
-const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports');
+// const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports');
+
 const csvResultPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
-const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
-const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+// const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
+// const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+
+/* testing */
+const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testtwoYearAgo.csv');
+const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testoneYearAgo.csv');
 
 
 
@@ -262,8 +267,8 @@ function zpracujCsv() {
 function deleteOldByznys(oldAdvertisers, oneYearAgo) {
 
     /* mock */
-    saveToFile(oneYearAgo);
-    return;
+    // saveToFile(oneYearAgo);
+    // return;
 
     console.log(oneYearAgo.length);
     let counter = 1;
