@@ -17,10 +17,10 @@ const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedR
 
 
 /* shelljs chce v path z nejakyho duvodu lomitka escapovat */
-const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
+// const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
 
 // testovaci sh script
-// const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
+const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
 
 
 let completed = {
