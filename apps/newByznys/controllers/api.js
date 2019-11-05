@@ -3,24 +3,21 @@ const path = require('path');
 const fs = require('fs');
 const csvParse = require('csv-parse');
 
+
 const mainDirectory = path.dirname(process.mainModule.filename);
 
-
-// const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports');
-
 const csvResultPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
-// const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
-// const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
+const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
 
 /* testing */
-const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testtwoYearAgo.csv');
-const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testoneYearAgo.csv');
+// const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testtwoYearAgo.csv');
+// const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'testoneYearAgo.csv');
 
 
 
 /* shelljs chce v path z nejakyho duvodu lomitka escapovat */
 // const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
-
 
 // testovaci sh script
 const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
@@ -55,14 +52,7 @@ exports.resetState = (req, res, next) => {
     res.status(200).json({
         message: `backend status reseted`
     });
-
 }
-
-
-
-
-
-
 
 
 
@@ -270,7 +260,9 @@ function deleteOldByznys(oldAdvertisers, oneYearAgo) {
     // saveToFile(oneYearAgo);
     // return;
 
-    console.log(oneYearAgo.length);
+    /* !!!! cpu a time heavy operace */
+
+    //console.log(oneYearAgo.length);
     let counter = 1;
     const result = oneYearAgo.filter(entry => {
         //   console.log('--------', entry);
@@ -286,14 +278,14 @@ function deleteOldByznys(oldAdvertisers, oneYearAgo) {
 
     })
 
-    console.log(result.length);
-    // todo
-    saveToFile(result);
+   // console.log(result.length);
+    // sejvni report, druhy argument je zahlavi (funkce ho smaze)
+    saveToFile(result, oneYearAgo[0]);
 
 }
 
 
-function saveToFile(arr) {
+function saveToFile(result, zahlavi) {
 
     const file = fs.createWriteStream(csvResultPath);
     file.on('error', function (err) {
@@ -305,8 +297,8 @@ function saveToFile(arr) {
         completed.csvProcessed = true;
     });
 
-
-    arr.forEach(function (row) {
+    file.write(zahlavi + '\n');
+    result.forEach(function (row) {
         // console.log(row)
         file.write(row + '\n');
     });
