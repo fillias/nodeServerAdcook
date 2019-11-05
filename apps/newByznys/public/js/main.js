@@ -1,5 +1,7 @@
 const newByznys = (function () {
 
+    resetBackendState();
+
     const loadBtn = document.getElementById('btn-load-report');
     const progressContainer = document.getElementById('progress-info-container');
     const progresText = document.getElementById('progress-info');
@@ -199,6 +201,12 @@ const newByznys = (function () {
 
 
 
-
+    function resetBackendState() {
+        getApiResponse('/newByznys/resetstate?' + Math.floor(Math.random() * 10000))
+            .then(result => {
+                console.log(result);
+            })
+            .catch(e => console.log(e));
+    }
 
 })();

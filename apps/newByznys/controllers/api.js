@@ -7,6 +7,11 @@ const mainDirectory = path.dirname(process.mainModule.filename);
 
 
 const reportPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports');
+const csvResultPath = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
+const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
+const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+
+
 
 /* shelljs chce v path z nejakyho duvodu lomitka escapovat */
 // const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
@@ -20,15 +25,46 @@ let completed = {
     oneYearAgo: false,
     twoYearAgo: false,
     csvProcessed: false,
-    oneYearAgoLength : 0,
-    twoYearAgoLength : 0
+    oneYearAgoLength: 0,
+    twoYearAgoLength: 0
+}
+
+
+exports.resetState = (req, res, next) => {
+    /* resetni stav a smaz vstupy a vystupy */
+
+    completed.oneYearAgo = false;
+    completed.twoYearAgo = false;
+    completed.csvProcessed = false;
+    completed.oneYearAgoLength = 0;
+    completed.twoYearAgoLength = 0;
+
+    try {
+        fs.writeFileSync(csvResultPath, 'reset: ' + new Date());
+        // fs.writeFileSync(csvOneYearAgo, 'reset');
+        // fs.writeFileSync(csvTwoYearAgo, 'reset');
+        console.log('-- reset --');
+    } catch (err) {
+        console.error(err);
+    }
+    res.status(200).json({
+        message: `backend status reseted`
+    });
+
 }
 
 
 
-exports.getReport = (req, res, next) => {
 
- 
+
+
+
+
+
+
+exports.getReport = (req, res, next) => {
+    /* hlavni fce co se zavola na klik na "loadni report", dale dle query */
+
 
     console.log('......... get report .........');
 
@@ -38,16 +74,19 @@ exports.getReport = (req, res, next) => {
     const now = new Date();
 
     let oneYearAgo = new Date();
-    oneYearAgo.setFullYear(now.getFullYear() -1);
+    oneYearAgo.setFullYear(now.getFullYear() - 1);
 
     let twoYearAgo = new Date();
-    twoYearAgo.setFullYear(now.getFullYear() -2);
+    twoYearAgo.setFullYear(now.getFullYear() - 2);
 
     let startDate, endDate;
 
     switch (action) {
 
-        /* FE se pta na stavy operaci */
+        /* FE se pta na stavy operaci nebo s pozadavkem na stazeni reportu
+         ** pokud je v query action "completed" nebo "csvprocess" tak vrat stav v jakem to je return.
+         ** pokud neni v query dotaz na stav zacni stahovat reporty dle pozadavku v query
+         */
 
         /* mame stazene reporty ze SAS? */
         case 'completed':
@@ -60,7 +99,7 @@ exports.getReport = (req, res, next) => {
                 /* setnem zpatky stav na false pro pristi requesty */
                 completed[reportType] = false;
                 return;
-        
+
             } else if (completed[reportType] === 'jobId-failed') {
                 /* pokud neco failne */
                 res.status(200).json({
@@ -79,29 +118,28 @@ exports.getReport = (req, res, next) => {
 
 
             /* mame dokoncene zprocesovani csv? */
-            case 'csv-process':
-                /* pokud se FE pta jestli je completed stazeni vrat jen stav a return */
-                if (completed.csvProcessed === true) {
-                    completed.csvProcessed = false;
-                    res.status(200).json({
-                        message: `csv-process-completed`
-                    });
-    
-                    /* setnem zpatky stav na false pro pristi requesty */
-                    completed.csvProcessed = false;
-                    return;
-            
-                }
-    
+        case 'csv-process':
+            if (completed.csvProcessed === true) {
+                completed.csvProcessed = false;
                 res.status(200).json({
-                    message: `csv-process-pending`,
-                    oneYearAgoLength: completed.oneYearAgoLength,
-                    twoYearAgoLength: completed.twoYearAgoLength
+                    message: `csv-process-completed`
                 });
+
+                /* setnem zpatky stav na false pro pristi requesty */
+                completed.csvProcessed = false;
                 return;
- 
-                
-        /* stahni pozadovany report */
+
+            }
+
+            res.status(200).json({
+                message: `csv-process-pending`,
+                oneYearAgoLength: completed.oneYearAgoLength,
+                twoYearAgoLength: completed.twoYearAgoLength
+            });
+            return;
+
+
+            /* stahni pozadovany report */
         case 'oneYearAgo':
             startDate = encodeURIComponent(toSasDate(oneYearAgo));
             endDate = encodeURIComponent(toSasDate(now));
@@ -119,19 +157,19 @@ exports.getReport = (req, res, next) => {
             // startDate = encodeURIComponent(toSasDate(now));
             // endDate = encodeURIComponent(toSasDate(now));
             break;
-        default: 
+        default:
             throw new Error('nesouhlasi query');
     }
-    
+
 
 
 
     // console.log('startDate', startDate);
     // console.log('endDate', endDate);
 
-    /* spustime shell script 
+    /* spustime shell script, ten zaridi stahnuti reportu "performance" pomoci SAS API
     prvni argument je jmeno reportu, druhy start date, treti end date    */
-    let params = ` ${req.query.action} ${startDate} ${endDate}` ;
+    let params = ` ${req.query.action} ${startDate} ${endDate}`;
 
 
     const reportDownloader = shell.exec(shellPath + params, {
@@ -139,17 +177,17 @@ exports.getReport = (req, res, next) => {
     });
 
     /* v shell scriptu je na konci echo "downloaded" */
-    reportDownloader.stdout.on('data', function (data) {   
-      // console.log('>>> data', data, ' <<< data');    
+    reportDownloader.stdout.on('data', function (data) {
+        // console.log('>>> data', data, ' <<< data');    
         if (data.match('stazeno')) {
             /* jakmile je shell script hotov nastav true */
-           console.log(`report ${action} downloader done`);
+            console.log(`report ${action} downloader done`);
             completed[action] = true;
         }
 
         if (data.match('jobId-failed')) {
             /* jakmile je shell script hotov nastav true */
-           console.log(`report ${action} jobId-failed`);
+            console.log(`report ${action} jobId-failed`);
             completed[action] = `jobId-failed`;
         }
     });
@@ -170,90 +208,79 @@ exports.processCsv = (req, res, next) => {
     });
 
     /* !!!! cpu a time heavy operace */
-   zpracujCsv();
+    zpracujCsv();
 }
 
 
-function zpracujCsv () {
-
-    const csvTwoYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'twoYearAgo.csv');
-
-    const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'oneYearAgo.csv');
+function zpracujCsv() {
 
     // vytahneme z twoYearAgo.csv advertisery (jsou jako 4. sloupec)
     let oldAdvertisers = []
     let oneYearAgo = [];
 
     fs.createReadStream(csvTwoYearAgo)
-    .pipe(csvParse())
-    .on('data', (row) => {
-       // console.log(row[3]);
-        oldAdvertisers.push(row[3]);
-    })
-    .on('end', () => {
-       // console.log(oldAdvertisers);
-       // console.log(`csvTwoYearAgo hotovo`);
-
-
-        // loadnem oneYearAgo.csv
-        fs.createReadStream(csvOneYearAgo)
         .pipe(csvParse())
         .on('data', (row) => {
-          // console.log(row.join(','));
-            oneYearAgo.push(row.join(','));
+            // console.log(row[3]);
+            oldAdvertisers.push(row[3]);
         })
         .on('end', () => {
-         //  console.log(oneYearAgo);
-          //  console.log(`csvOneYearAgo hotovo`);
-            completed.oneYearAgoLength = oneYearAgo.length;
-            completed.twoYearAgoLength = oldAdvertisers.length;
+            // console.log(oldAdvertisers);
+            // console.log(`csvTwoYearAgo hotovo`);
 
-            /* mock cpu heavy operation */
-            setTimeout(_ => {
-                completed.csvProcessed = true;
-            }, 40000);
 
-            /* test */
-            saveToFile(oneYearAgo);
-          /* !!!! cpu a time heavy operace */
-         // deleteOldByznys(oldAdvertisers, oneYearAgo);
+            // loadnem oneYearAgo.csv
+            fs.createReadStream(csvOneYearAgo)
+                .pipe(csvParse())
+                .on('data', (row) => {
+                    // console.log(row.join(','));
+                    oneYearAgo.push(row.join(','));
+                })
+                .on('end', () => {
+                    //  console.log(oneYearAgo);
+                    //  console.log(`csvOneYearAgo hotovo`);
+                    completed.oneYearAgoLength = oneYearAgo.length;
+                    completed.twoYearAgoLength = oldAdvertisers.length;
+
+                    /* mock cpu heavy operation */
+                    setTimeout(_ => {
+                        completed.csvProcessed = true;
+                    }, 40000);
+
+                    /* test */
+
+                    /* !!!! cpu a time heavy operace */
+                    deleteOldByznys(oldAdvertisers, oneYearAgo);
+                });
+
+
         });
-
-
-    });
 }
 
 
-exports.downloadResult = (req, res, next) => {
 
-    const cesta = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
+function deleteOldByznys(oldAdvertisers, oneYearAgo) {
 
-     const file = fs.createReadStream(cesta);
-     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-     res.setHeader('Content-Disposition', 'attachment; filename="result.csv"');
+    /* mock */
+    saveToFile(oneYearAgo);
+    return;
 
-     file.pipe(res);
-
-}
-
-
-function deleteOldByznys (oldAdvertisers, oneYearAgo) {
     console.log(oneYearAgo.length);
     let counter = 1;
     const result = oneYearAgo.filter(entry => {
-     //   console.log('--------', entry);
-      //  console.log(`--${counter}--`);
+        //   console.log('--------', entry);
+        //  console.log(`--${counter}--`);
         const found = oldAdvertisers.find(advertiser => {
             if (entry.search(advertiser) != -1) {
                 return advertiser;
-            } 
+            }
         });
         /* pokud advertisera nenajde, vrat true */
         counter++;
         return found == undefined ? true : false;
 
     })
-    
+
     console.log(result.length);
     // todo
     saveToFile(result);
@@ -262,22 +289,41 @@ function deleteOldByznys (oldAdvertisers, oneYearAgo) {
 
 
 function saveToFile(arr) {
-    // todo
-    // const result = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
 
-    // fs.createWriteStream(cesta)
-    // .pipe(csvParse())
-    // .on('data', (row) => {
-    //   csvParse.write(row);
-    // })
-    // .on('end', () => {
-    //   console.log('end');
-    // });
+    const file = fs.createWriteStream(csvResultPath);
+    file.on('error', function (err) {
+        /* error handling */
+    });
+
+    file.on('finish', function () {
+        console.log('zapsano');
+        completed.csvProcessed = true;
+    });
+
+
+    arr.forEach(function (row) {
+        // console.log(row)
+        file.write(row + '\n');
+    });
+    file.end();
+
+}
+
+
+exports.downloadResult = (req, res, next) => {
+
+    const cesta = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedReports', 'result.csv');
+
+    const file = fs.createReadStream(cesta);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="result.csv"');
+
+    file.pipe(res);
+
 }
 
 
 function toSasDate(dateObj) {
     /* SAS reporty maji datum ve formatu 10/29/2018 */
-        return `${dateObj.getMonth()+1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+    return `${dateObj.getMonth()+1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
 }
-    

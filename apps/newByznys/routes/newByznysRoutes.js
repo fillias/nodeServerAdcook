@@ -6,8 +6,10 @@ const newByznysApp = require('../app');
 
 const newByznysAPI = require('../controllers/api');
 
-router.get('/process-csv', newByznysAPI.processCsv);
 
+router.get('/resetstate', newByznysAPI.resetState);
+
+router.get('/process-csv', newByznysAPI.processCsv);
 
 router.get('/getreport', newByznysAPI.getReport);
 

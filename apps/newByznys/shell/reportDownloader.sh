@@ -29,8 +29,8 @@ exec 2>/dev/null
 
 # smaz stary
 # nazvy souboru ukladej jako prvniho argumentu pri volani tohoto scriptu
-# rm "$myDir/$1.xml"
-# rm "$myDir/$1.csv"
+ rm "$myDir/$1.xml"
+ rm "$myDir/$1.csv"
 
 
 
