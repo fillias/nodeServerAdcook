@@ -17,10 +17,10 @@ const csvOneYearAgo = path.join(mainDirectory, 'apps', 'newByznys', 'downloadedR
 
 
 /* shelljs chce v path z nejakyho duvodu lomitka escapovat */
-// const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
+const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'reportDownloader.sh').replace(/\//g, '\\/');
 
 // testovaci sh script
-const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
+// const shellPath = path.join(mainDirectory, 'apps', 'newByznys', 'shell', 'test.sh').replace(/\//g, '\\/');
 
 
 let completed = {
@@ -43,8 +43,8 @@ exports.resetState = (req, res, next) => {
 
     try {
         fs.writeFileSync(csvResultPath, 'reset: ' + new Date());
-        // fs.writeFileSync(csvOneYearAgo, 'reset');
-        // fs.writeFileSync(csvTwoYearAgo, 'reset');
+        fs.writeFileSync(csvOneYearAgo, 'reset');
+        fs.writeFileSync(csvTwoYearAgo, 'reset');
         console.log('-- reset --');
     } catch (err) {
         console.error(err);
