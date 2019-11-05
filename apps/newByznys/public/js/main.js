@@ -123,21 +123,24 @@ const newByznys = (function () {
 
 
 
-    function processCsv () {
-        return new Promise ((resolve, reject) => {
+    function processCsv() {
+        return new Promise((resolve, reject) => {
             getApiResponse('/newByznys/process-csv')
-            .then(result => {
-                console.log(result);
-            })
-            .then(result => {
-               resolve( checkProcessingStatus() );
-               
-            })
-            .catch(e => console.log(e));
+                .then(result => {
+                    console.log(result);
+                    progressCounter.innerHTML = `
+                            Pocet radku v reportu za poslednich 365 dnu: ${result.oneYearAgoLength}<br>
+                            Pocet radku v reportu se starsimi zaznamy: ${result.twoYearAgoLength}`;
+                })
+                .then(result => {
+                    resolve(checkProcessingStatus());
+
+                })
+                .catch(e => console.log(e));
         })
     }
 
-    /* kazdych 11sec se dotaz jestli je csv zpracovano */
+    /* kazdych 15sec se dotaz jestli je csv zpracovano */
     async function checkProcessingStatus() {
         const result = await new Promise((resolve, reject) => {
             let counter = 1;
@@ -148,23 +151,19 @@ const newByznys = (function () {
                     .then(result => {
                         console.log('checkDownloadingStatus result', result);
 
-
                         if (result.message === `csv-process-completed`) {
                             clearInterval(timer);
                             counter = 1;
                             resolve(`csv-process-completed`);
                         }
-                        progressCounter.innerHTML = `
-                            Pocet radku v reportu za poslednich 365 dnu: ${result.oneYearAgoLength}<br>
-                            Pocet radku v reportu se starsimi zaznamy: ${result.twoYearAgoLength}<br>
-                            Cekam na zpracovani vysledneho csv - pokus cislo: <strong>${counter}</strong>`;
+
                         counter++;
 
                     })
                     .catch(err => {
                         console.log(err)
                     });
-            }, 11000);
+            }, 15000);
         });
 
         return result;

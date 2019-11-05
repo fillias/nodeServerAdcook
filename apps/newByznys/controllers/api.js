@@ -198,58 +198,70 @@ exports.getReport = (req, res, next) => {
 exports.processCsv = (req, res, next) => {
     /* vratime odpoved ze na tom makam */
 
-    res.status(200).json({
-        message: `csv-process-pending`
-    });
 
-    /* !!!! cpu a time heavy operace */
-    zpracujCsv();
+
+
+    zpracujCsv()
+        .then((resolved) => {
+            completed.oneYearAgoLength = resolved.oneYearAgo.length;
+            completed.twoYearAgoLength = resolved.oldAdvertisers.length;
+
+            console.log(completed.twoYearAgoLength);
+            res.status(200).json({
+                message: `csv-process-pending`,
+                oneYearAgoLength: completed.oneYearAgoLength,
+                twoYearAgoLength: completed.twoYearAgoLength
+            });
+
+            /* !!!! cpu a time heavy operace */
+            /* mock cpu heavy operation */
+            // setTimeout(_ => {
+            //     completed.csvProcessed = true;
+            // }, 40000);
+
+             deleteOldByznys(resolved.oldAdvertisers, resolved.oneYearAgo);
+        }).catch(e => console.log(e));;
 }
 
 
 function zpracujCsv() {
 
-    // vytahneme z twoYearAgo.csv advertisery (jsou jako 4. sloupec)
-    let oldAdvertisers = []
-    let oneYearAgo = [];
+    return new Promise((resolve, reject) => {
+        // vytahneme z twoYearAgo.csv advertisery (jsou jako 4. sloupec)
+        let oldAdvertisers = []
+        let oneYearAgo = [];
 
-    fs.createReadStream(csvTwoYearAgo)
-        .pipe(csvParse())
-        .on('data', (row) => {
-            // console.log(row[3]);
-            oldAdvertisers.push(row[3]);
-        })
-        .on('end', () => {
-            // console.log(oldAdvertisers);
-            // console.log(`csvTwoYearAgo hotovo`);
-
-
-            // loadnem oneYearAgo.csv
-            fs.createReadStream(csvOneYearAgo)
-                .pipe(csvParse())
-                .on('data', (row) => {
-                    // console.log(row.join(','));
-                    oneYearAgo.push(row.join(','));
-                })
-                .on('end', () => {
-                    //  console.log(oneYearAgo);
-                    //  console.log(`csvOneYearAgo hotovo`);
-                    completed.oneYearAgoLength = oneYearAgo.length;
-                    completed.twoYearAgoLength = oldAdvertisers.length;
-
-                    /* mock cpu heavy operation */
-                    setTimeout(_ => {
-                        completed.csvProcessed = true;
-                    }, 40000);
-
-                    /* test */
-
-                    /* !!!! cpu a time heavy operace */
-                    deleteOldByznys(oldAdvertisers, oneYearAgo);
-                });
+        fs.createReadStream(csvTwoYearAgo)
+            .pipe(csvParse())
+            .on('data', (row) => {
+                // console.log(row[3]);
+                oldAdvertisers.push(row[3]);
+            })
+            .on('error', (err) => {
+                reject(err);
+            })
+            .on('end', () => {
+                // console.log(oldAdvertisers);
+                // console.log(`csvTwoYearAgo hotovo`);
 
 
-        });
+                // loadnem oneYearAgo.csv
+                fs.createReadStream(csvOneYearAgo)
+                    .pipe(csvParse())
+                    .on('data', (row) => {
+                        // console.log(row.join(','));
+                        oneYearAgo.push(row.join(','));
+                    })
+                    .on('end', () => {
+                        // console.log(oneYearAgo);
+                        //  console.log(`csvOneYearAgo hotovo`);
+                        resolve({oldAdvertisers, oneYearAgo});
+                    });
+            });
+
+    })
+
+
 }
 
 
@@ -263,7 +275,6 @@ function deleteOldByznys(oldAdvertisers, oneYearAgo) {
     /* !!!! cpu a time heavy operace */
 
     //console.log(oneYearAgo.length);
-    let counter = 1;
     const result = oneYearAgo.filter(entry => {
         //   console.log('--------', entry);
         //  console.log(`--${counter}--`);
@@ -273,12 +284,11 @@ function deleteOldByznys(oldAdvertisers, oneYearAgo) {
             }
         });
         /* pokud advertisera nenajde, vrat true */
-        counter++;
         return found == undefined ? true : false;
 
     })
 
-   // console.log(result.length);
+    // console.log(result.length);
     // sejvni report, druhy argument je zahlavi (funkce ho smaze)
     saveToFile(result, oneYearAgo[0]);
 
